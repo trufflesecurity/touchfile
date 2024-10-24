@@ -53,7 +53,7 @@ if err != nil {
     log.Fatalf("failed to create touch file: %v", err)
 }
 
-if err := tf.Lock(ctx); err != nil {
+if err := tf.Lock(ctx, touchfile.Exclusive); err != nil {
     log.Fatalf("failed to acquire lock: %v", err)
 }
 defer func() {
@@ -83,7 +83,7 @@ if err != nil {
     log.Fatalf("failed to create touch file: %v", err)
 }
 
-err = tf.WithLock(ctx, func() error {
+err = tf.WithLock(ctx, touchfile.Exclusive, func() error {
     fmt.Println("Doing some work while holding the lock")
     return nil
 })

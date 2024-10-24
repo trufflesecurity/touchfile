@@ -20,48 +20,48 @@
 //
 // Basic usage:
 //
-//  ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-//  defer cancel()
+//	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+//	defer cancel()
 //
-//  tf, err := touchfile.NewTouchFile("/tmp/mylockfile")
-//  if err != nil {
-//      log.Fatalf("failed to create touch file: %v", err)
-//  }
+//	tf, err := touchfile.NewTouchFile("/tmp/mylockfile")
+//	if err != nil {
+//	    log.Fatalf("failed to create touch file: %v", err)
+//	}
 //
-//  if err := tf.Lock(ctx); err != nil {
-//      log.Fatalf("failed to acquire lock: %v", err)
-//  }
-//  defer func() {
-//      if err := tf.Unlock(); err != nil {
-//          log.Printf("failed to release lock: %v", err)
-//      }
-//  }()
+//	if err := tf.Lock(ctx, touchfile.Exclusive); err != nil {
+//	    log.Fatalf("failed to acquire lock: %v", err)
+//	}
+//	defer func() {
+//	    if err := tf.Unlock(); err != nil {
+//	        log.Printf("failed to release lock: %v", err)
+//	    }
+//	}()
 //
 // Global lock using the program binary:
 //
-//  program, err := os.Executable()
-//  if err != nil {
-//    log.Fatalf("failed to determine executable path: %v", err)
-//  }
+//	program, err := os.Executable()
+//	if err != nil {
+//	  log.Fatalf("failed to determine executable path: %v", err)
+//	}
 //
-//  tf, err := touchfile.NewTouchFile(program)
-//  ...
+//	tf, err := touchfile.NewTouchFile(program)
+//	...
 //
 // Using WithLock for a critical section:
 //
-//  tf, err := touchfile.NewTouchFile("/tmp/mylockfile")
-//  if err != nil {
-//      log.Fatalf("failed to create touch file: %v", err)
-//  }
+//	tf, err := touchfile.NewTouchFile("/tmp/mylockfile")
+//	if err != nil {
+//	    log.Fatalf("failed to create touch file: %v", err)
+//	}
 //
-//  err = tf.WithLock(ctx, func() error {
-//      // Critical section
-//      fmt.Println("Doing some work while holding the lock")
-//      return nil
-//  })
-//  if err != nil {
-//      log.Fatalf("operation failed: %v", err)
-//  }
+//	err = tf.WithLock(ctx, touchfile.Exclusive, func() error {
+//	    // Critical section
+//	    fmt.Println("Doing some work while holding the lock")
+//	    return nil
+//	})
+//	if err != nil {
+//	    log.Fatalf("operation failed: %v", err)
+//	}
 package touchfile
 
 import (
@@ -100,17 +100,16 @@ const (
 
 const lockRetryInterval = 10 * time.Millisecond
 
-
 // NewTouchFile creates a TouchFile using flock for advisory locking. If the
 // provided path is empty, a temporary file path will be used instead. The path
 // is converted to an absolute path.
 //
 // Example:
 //
-//  tf, err := touchfile.NewTouchFile("/tmp/mylockfile")
-//  if err != nil {
-//      log.Fatalf("failed to create touch file: %v", err)
-//  }
+//	tf, err := touchfile.NewTouchFile("/tmp/mylockfile")
+//	if err != nil {
+//	    log.Fatalf("failed to create touch file: %v", err)
+//	}
 func NewTouchFile(path string) (*TouchFile, error) {
 	absPath, err := createTouchFile(path)
 	if err != nil {
@@ -163,22 +162,22 @@ func (tf *TouchFile) Path() string {
 //
 // Example:
 //
-//  ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-//  defer cancel()
+//	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+//	defer cancel()
 //
-//  tf, err := touchfile.NewTouchFile("/tmp/mylockfile")
-//  if err != nil {
-//      log.Fatalf("failed to create touch file: %v", err)
-//  }
+//	tf, err := touchfile.NewTouchFile("/tmp/mylockfile")
+//	if err != nil {
+//	    log.Fatalf("failed to create touch file: %v", err)
+//	}
 //
-//  if err := tf.Lock(ctx, touchfile.Shared); err != nil {
-//      log.Fatalf("failed to acquire shared lock: %v", err)
-//  }
-//  defer func() {
-//      if err := tf.Unlock(); err != nil {
-//          log.Printf("failed to release lock: %v", err)
-//      }
-//  }()
+//	if err := tf.Lock(ctx, touchfile.Shared); err != nil {
+//	    log.Fatalf("failed to acquire shared lock: %v", err)
+//	}
+//	defer func() {
+//	    if err := tf.Unlock(); err != nil {
+//	        log.Printf("failed to release lock: %v", err)
+//	    }
+//	}()
 func (tf *TouchFile) Lock(ctx context.Context, lockType LockType) error {
 	tf.mu.Lock()
 	defer tf.mu.Unlock()
@@ -226,21 +225,21 @@ func (tf *TouchFile) lockExclusive(ctx context.Context) (bool, error) {
 //
 // Example:
 //
-//  tf, err := touchfile.NewTouchFile("/tmp/mylockfile")
-//  if err != nil {
-//      log.Fatalf("failed to create touch file: %v", err)
-//  }
+//	tf, err := touchfile.NewTouchFile("/tmp/mylockfile")
+//	if err != nil {
+//	    log.Fatalf("failed to create touch file: %v", err)
+//	}
 //
-//  ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-//  defer cancel()
+//	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+//	defer cancel()
 //
-//  if err := tf.Lock(ctx); err != nil {
-//      log.Fatalf("failed to acquire lock: %v", err)
-//  }
+//	if err := tf.Lock(ctx, touchfile.Exclusive); err != nil {
+//	    log.Fatalf("failed to acquire lock: %v", err)
+//	}
 //
-//  if err := tf.Unlock(); err != nil {
-//      log.Printf("failed to release lock: %v", err)
-//  }
+//	if err := tf.Unlock(); err != nil {
+//	    log.Printf("failed to release lock: %v", err)
+//	}
 func (tf *TouchFile) Unlock() error {
 	tf.mu.Lock()
 	defer tf.mu.Unlock()
@@ -258,21 +257,21 @@ func (tf *TouchFile) Unlock() error {
 //
 // Example:
 //
-//  ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-//  defer cancel()
+//	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+//	defer cancel()
 //
-//  tf, err := touchfile.NewTouchFile("/tmp/mylockfile")
-//  if err != nil {
-//      log.Fatalf("failed to create touch file: %v", err)
-//  }
+//	tf, err := touchfile.NewTouchFile("/tmp/mylockfile")
+//	if err != nil {
+//	    log.Fatalf("failed to create touch file: %v", err)
+//	}
 //
-//  err = tf.WithLock(ctx, func() error {
-//      fmt.Println("Doing some work while holding the lock")
-//      return nil
-//  })
-//  if err != nil {
-//      log.Fatalf("operation failed: %v", err)
-//  }
+//	err = tf.WithLock(ctx, touchfile.Exclusive, func() error {
+//	    fmt.Println("Doing some work while holding the lock")
+//	    return nil
+//	})
+//	if err != nil {
+//	    log.Fatalf("operation failed: %v", err)
+//	}
 func (tf *TouchFile) WithLock(ctx context.Context, lockType LockType, f func() error) error {
 	if err := tf.Lock(ctx, lockType); err != nil {
 		return err
