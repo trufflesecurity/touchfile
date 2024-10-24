@@ -1,0 +1,14 @@
+name: Trigger reindex on go proxy
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'  # Trigger only on version tags
+
+jobs:
+  index-module:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Trigger Go Proxy Indexing
+        run: curl https://sum.golang.org/lookup/github.com/${{ github.repository }}@${{ github.ref_name }}
