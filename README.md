@@ -84,7 +84,6 @@ if err != nil {
 }
 
 err = tf.WithLock(ctx, func() error {
-     Critical section
     fmt.Println("Doing some work while holding the lock")
     return nil
 })
