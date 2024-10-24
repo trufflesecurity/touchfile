@@ -1,3 +1,5 @@
+[![test suite](https://github.com/trufflesecurity/touchfile/actions/workflows/run-tests.yml/badge.svg)](https://github.com/trufflesecurity/touchfile/actions/workflows/run-tests.yml)
+
 # touchfile
 `touchfile` is a Go package that provides a mechanism for creating, locking,
 and managing touch files to coordinate access between different processes and
